@@ -1,0 +1,7 @@
+# 数据文件
+data/raw/*.json
+data/raw/*.json.gz
+data/processed/*.pkl
+*.log
+__pycache__/
+.env
