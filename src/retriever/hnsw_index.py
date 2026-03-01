@@ -88,14 +88,14 @@ class HNSWIndex:
         results = [(-self._cosine_similarity(query, self.nodes[entry_point].vector), entry_point)]
         
         while candidates:
-            # 取出距离最大的候选
-            dist_neg, curr_id = heapq.heappop(candidates)
-            curr_dist = -dist_neg
+            # 取出相似度最大的候选（注意：用负值实现最大堆）
+            sim_neg, curr_id = heapq.heappop(candidates)
+            curr_sim = -sim_neg
             
-            # 如果当前距离已经大于结果集中最远的，停止
+            # 如果当前相似度已经小于结果集中最差的，停止
             if len(results) >= ef:
-                farthest_dist = -results[0][0]
-                if curr_dist > farthest_dist:
+                worst_sim = -results[0][0]
+                if curr_sim < worst_sim:
                     break
             
             # 遍历邻居
@@ -104,13 +104,13 @@ class HNSWIndex:
                 for neighbor_id in node.neighbors[layer]:
                     if neighbor_id not in visited:
                         visited.add(neighbor_id)
-                        neighbor_dist = self._cosine_similarity(query, self.nodes[neighbor_id].vector)
+                        neighbor_sim = self._cosine_similarity(query, self.nodes[neighbor_id].vector)
                         
-                        # 加入候选集
-                        heapq.heappush(candidates, (-neighbor_dist, neighbor_id))
+                        # 加入候选集（用负相似度实现最大堆）
+                        heapq.heappush(candidates, (-neighbor_sim, neighbor_id))
                         
                         # 加入结果集
-                        heapq.heappush(results, (-neighbor_dist, neighbor_id))
+                        heapq.heappush(results, (-neighbor_sim, neighbor_id))
                         
                         # 保持结果集大小为 ef
                         if len(results) > ef:
