@@ -270,8 +270,8 @@
     </div>
     
     <script>
-        // 使用本地地址
-        const API_BASE = 'http://127.0.0.1:5000';
+        // 自动检测当前访问的协议和主机
+        const API_BASE = window.location.protocol + '//' + window.location.host;
         
         // 检查系统状态
         async function checkStatus() {
