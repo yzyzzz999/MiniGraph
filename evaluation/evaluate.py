@@ -97,15 +97,60 @@ class MiniGraphEvaluator:
             return f"Error: {str(e)}", time.time() - start
     
     def check_correctness(self, prediction: str, ground_truth: str) -> bool:
+        """
+        检查答案是否正确
+        优化版本：更宽松的匹配逻辑
+        """
         if not prediction or not ground_truth:
             return False
-        prediction = prediction.lower()
-        ground_truth = ground_truth.lower()
-        keywords = [k for k in ground_truth.split() if len(k) >= 2]
-        for keyword in keywords:
-            if keyword in prediction:
-                return True
-        return False
+        
+        # 如果预测包含错误信息
+        if prediction.startswith('Error:'):
+            return False
+        
+        prediction_lower = prediction.lower()
+        ground_truth_lower = ground_truth.lower()
+        
+        # 提取 ground_truth 中的关键词（至少2个字符）
+        import re
+        keywords = re.findall(r'[\u4e00-\u9fa5]{2,}|[a-zA-Z]{2,}|\d+', ground_truth_lower)
+        
+        if not keywords:
+            return False
+        
+        # 特殊处理：朝代/时代等价
+        dynasty_mapping = {
+            '唐朝': ['唐朝', '唐代', '大唐'],
+            '宋朝': ['宋朝', '宋代', '大宋'],
+            '明朝': ['明朝', '明代', '大明'],
+            '清朝': ['清朝', '清代', '大清'],
+            '秦朝': ['秦朝', '秦代', '大秦'],
+            '汉朝': ['汉朝', '汉代', '大汉'],
+        }
+        
+        # 检查是否有朝代映射
+        for dynasty, variants in dynasty_mapping.items():
+            if dynasty in ground_truth_lower:
+                # 如果 ground_truth 包含朝代，检查 prediction 是否包含任一 variant
+                if any(v in prediction_lower for v in variants):
+                    return True
+        
+        # 检查人名（允许部分匹配）
+        # 例如 "唐太宗李世民" 可以匹配 "唐太宗" 或 "李世民"
+        name_keywords = [k for k in keywords if len(k) >= 2]
+        matched_keywords = 0
+        
+        for keyword in name_keywords:
+            if keyword in prediction_lower:
+                matched_keywords += 1
+        
+        # 如果匹配了至少一个关键词，认为是正确的
+        # 对于短答案（1-2个关键词），需要全部匹配
+        # 对于长答案（>2个关键词），匹配至少一个即可
+        if len(name_keywords) <= 2:
+            return matched_keywords >= len(name_keywords)
+        else:
+            return matched_keywords >= 1
     
     def evaluate_test_case(self, test_case: Dict) -> TestResult:
         print(f"\n评测: {test_case['id']} - {test_case['question']}")
