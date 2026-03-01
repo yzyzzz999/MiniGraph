@@ -100,7 +100,7 @@ class HNSWIndex:
             
             # 遍历邻居
             node = self.nodes[curr_id]
-            if layer in node.neighbors:
+            if layer in node.neighbors and node.neighbors[layer]:
                 for neighbor_id in node.neighbors[layer]:
                     if neighbor_id not in visited:
                         visited.add(neighbor_id)
@@ -117,7 +117,9 @@ class HNSWIndex:
                             heapq.heappop(results)
         
         # 返回排序后的结果（按相似度降序）
-        return sorted([(-d, nid) for d, nid in results], reverse=True)
+        final_results = [(-d, nid) for d, nid in results]
+        final_results.sort(reverse=True)  # 按相似度降序
+        return final_results
     
     def _select_neighbors(self, query: np.ndarray, 
                           candidates: List[Tuple[float, int]], 
@@ -221,10 +223,13 @@ class HNSWIndex:
         curr_ep = self.entry_point
         
         # 从最高层开始，每层找到最近邻作为下一层入口
+        # 注意：只搜索节点存在的层
         for layer in range(self.max_layer, 0, -1):
-            results = self._search_layer(query, curr_ep, ef=1, layer=layer)
-            if results:
-                curr_ep = results[0][1]
+            # 检查入口点是否在该层有连接
+            if layer in self.nodes[curr_ep].neighbors and self.nodes[curr_ep].neighbors[layer]:
+                results = self._search_layer(query, curr_ep, ef=1, layer=layer)
+                if results:
+                    curr_ep = results[0][1]
         
         # 在第 0 层搜索 ef_search 个候选
         results = self._search_layer(query, curr_ep, ef=self.ef_search, layer=0)
