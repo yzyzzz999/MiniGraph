@@ -23,6 +23,44 @@ from retriever.vector_cache import vector_cache_exists, load_vector_cache, save_
 app = Flask(__name__)
 CORS(app)
 
+# ============ API 监控 ============
+
+# 请求计数器
+request_count = 0
+request_count_lock = Lock()
+
+@app.before_request
+def before_request():
+    """请求开始时间"""
+    request.start_time = time.time()
+    global request_count
+    with request_count_lock:
+        request_count += 1
+
+@app.route('/health', endpoint='health_check')
+def health_check():
+    """健康检查接口"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': time.time(),
+        'services': {
+            'neo4j': graph is not None,
+            'llm': llm is not None,
+            'vector_index': retriever.vectors is not None
+        }
+    })
+
+@app.route('/metrics', endpoint='api_metrics')
+def api_metrics():
+    """API 指标接口"""
+    global request_count
+    return jsonify({
+        'total_requests': request_count,
+        'vector_index_size': len(retriever.entities) if retriever.entities else 0,
+        'llm_cache_size': len(llm.cache) if llm else 0,
+        'neo4j_connected': graph is not None
+    })
+
 # 线程池用于异步任务
 executor = ThreadPoolExecutor(max_workers=4)
 
@@ -67,8 +105,8 @@ print("初始化向量检索...")
 
 retriever = ChineseVectorRetriever()
 vector_index_paths = [
-    '/autodl-fs/data/MiniGraph/data/processed/vector_index_bge.json',
-    '/root/.openclaw/workspace/MiniGraph/data/processed/vector_index_bge.json',
+    '/autodl-fs/data/MiniGraph/data/processed/vector_index_bge_full.json',
+    '/root/.openclaw/workspace/MiniGraph/data/processed/vector_index_bge_full.json',
 ]
 
 vector_index_loaded = False
