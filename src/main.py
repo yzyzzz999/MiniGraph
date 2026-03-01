@@ -4,6 +4,7 @@ MiniGraph API 服务 - 优化版
 2. 实体关系链式检索
 3. 向量索引缓存加速
 4. 异步处理支持
+5. API 性能监控
 """
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -12,6 +13,8 @@ import sys
 import os
 import time
 import uuid
+import json
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
@@ -22,6 +25,111 @@ from retriever.vector_cache import vector_cache_exists, load_vector_cache, save_
 
 app = Flask(__name__)
 CORS(app)
+
+# ============ 性能监控 ============
+
+# 请求日志存储（内存中，保留最近 1000 条）
+request_logs = []
+log_lock = Lock()
+MAX_LOGS = 1000
+
+def log_request(endpoint, method, status_code, duration_ms, query=None):
+    """记录请求日志"""
+    with log_lock:
+        request_logs.append({
+            'timestamp': datetime.now().isoformat(),
+            'endpoint': endpoint,
+            'method': method,
+            'status_code': status_code,
+            'duration_ms': round(duration_ms, 2),
+            'query': query[:100] if query else None
+        })
+        if len(request_logs) > MAX_LOGS:
+            request_logs.pop(0)
+
+def get_monitor_stats():
+    """获取监控统计信息"""
+    with log_lock:
+        if not request_logs:
+            return {'message': '暂无数据'}
+        
+        total = len(request_logs)
+        avg_time = sum(r['duration_ms'] for r in request_logs) / total
+        error_count = sum(1 for r in request_logs if r['status_code'] >= 400)
+        
+        endpoint_stats = {}
+        for r in request_logs:
+            ep = r['endpoint']
+            if ep not in endpoint_stats:
+                endpoint_stats[ep] = {'count': 0, 'total_time': 0}
+            endpoint_stats[ep]['count'] += 1
+            endpoint_stats[ep]['total_time'] += r['duration_ms']
+        
+        for ep in endpoint_stats:
+            endpoint_stats[ep]['avg_time'] = round(
+                endpoint_stats[ep]['total_time'] / endpoint_stats[ep]['count'], 2
+            )
+        
+        return {
+            'total_requests': total,
+            'avg_response_time_ms': round(avg_time, 2),
+            'error_rate': round(error_count / total * 100, 2),
+            'endpoints': endpoint_stats
+        }
+
+@app.before_request
+def before_request():
+    """请求开始时间"""
+    request.start_time = time.time()
+
+@app.after_request
+def after_request(response):
+    """记录请求日志"""
+    if hasattr(request, 'start_time'):
+        duration = (time.time() - request.start_time) * 1000
+        query = None
+        if request.is_json:
+            try:
+                query = request.get_json().get('question') or request.get_json().get('query')
+            except:
+                pass
+        
+        log_request(
+            endpoint=request.endpoint,
+            method=request.method,
+            status_code=response.status_code,
+            duration_ms=duration,
+            query=query
+        )
+    return response
+
+@app.route('/health')
+def health_check():
+    """健康检查接口"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'services': {
+            'neo4j': graph is not None,
+            'llm': llm is not None,
+            'vector_index': retriever.vectors is not None
+        }
+    })
+
+@app.route('/monitor/stats')
+def monitor_stats_endpoint():
+    """获取 API 性能统计信息"""
+    return jsonify(get_monitor_stats())
+
+@app.route('/monitor/logs')
+def monitor_logs_endpoint():
+    """获取最近请求日志"""
+    limit = int(request.args.get('limit', 100))
+    with log_lock:
+        return jsonify({
+            'count': len(request_logs),
+            'logs': request_logs[-limit:]
+        })
 
 # 线程池用于异步任务
 executor = ThreadPoolExecutor(max_workers=4)
@@ -345,8 +453,8 @@ def index():
     })
 
 
-@app.route('/stats')
-def stats():
+@app.route("/db/stats")
+def db_stats():
     """统计信息"""
     try:
         entity_count = graph.run("MATCH (e:Entity) RETURN count(e) as c").data()[0]['c'] if graph else 0
