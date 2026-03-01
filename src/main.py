@@ -921,6 +921,11 @@ if os.path.exists(static_dir):
     app.static_folder = static_dir
     print(f"静态文件目录: {static_dir}")
 
+@app.route('/web')
+def web_interface():
+    """前端界面"""
+    return app.send_static_file('index.html')
+
 
 def main():
     print("=" * 60)
