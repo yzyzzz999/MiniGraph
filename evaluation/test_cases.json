@@ -1,0 +1,228 @@
+{
+  "test_cases": [
+    {
+      "id": "F01",
+      "category": "fact",
+      "question": "唐朝的开国皇帝是谁？",
+      "answer": "李渊",
+      "entities": ["唐朝", "李渊"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "F02",
+      "category": "fact",
+      "question": "李白是哪个朝代的人？",
+      "answer": "唐朝",
+      "entities": ["李白", "唐朝"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "F03",
+      "category": "fact",
+      "question": "贞观之治是哪个皇帝的治世？",
+      "answer": "唐太宗李世民",
+      "entities": ["贞观之治", "唐太宗"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "F04",
+      "category": "fact",
+      "question": "宋朝的开国皇帝是谁？",
+      "answer": "赵匡胤",
+      "entities": ["宋朝", "赵匡胤"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "F05",
+      "category": "fact",
+      "question": "秦始皇统一六国是哪一年？",
+      "answer": "公元前221年",
+      "entities": ["秦始皇", "秦朝"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "F06",
+      "category": "fact",
+      "question": "三国演义是谁写的？",
+      "answer": "罗贯中",
+      "entities": ["三国演义", "罗贯中"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "F07",
+      "category": "fact",
+      "question": "红楼梦的作者是谁？",
+      "answer": "曹雪芹",
+      "entities": ["红楼梦", "曹雪芹"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "F08",
+      "category": "fact",
+      "question": "西游记的主人公是谁？",
+      "answer": "孙悟空",
+      "entities": ["西游记", "孙悟空"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "F09",
+      "category": "fact",
+      "question": "水浒传有多少好汉？",
+      "answer": "108位",
+      "entities": ["水浒传"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "F10",
+      "category": "fact",
+      "question": "孔子的故乡在哪里？",
+      "answer": "鲁国陬邑",
+      "entities": ["孔子"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "R01",
+      "category": "relation",
+      "question": "唐朝和隋朝有什么关系？",
+      "answer": "唐朝继承隋朝，李渊曾是隋朝臣子",
+      "entities": ["唐朝", "隋朝"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "R02",
+      "category": "relation",
+      "question": "李白和杜甫有什么关系？",
+      "answer": "同时代诗人，都是唐朝人",
+      "entities": ["李白", "杜甫", "唐朝"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "R03",
+      "category": "relation",
+      "question": "唐太宗和唐玄宗是什么关系？",
+      "answer": "祖孙关系",
+      "entities": ["唐太宗", "唐玄宗"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "R04",
+      "category": "relation",
+      "question": "刘备和孙权是什么关系？",
+      "answer": "盟友兼对手，赤壁之战合作对抗曹操",
+      "entities": ["刘备", "孙权", "赤壁之战"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "R05",
+      "category": "relation",
+      "question": "孔子和孟子是什么关系？",
+      "answer": "孟子继承发展孔子思想，被称亚圣",
+      "entities": ["孔子", "孟子"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "R06",
+      "category": "relation",
+      "question": "三国时期魏国的建立者是谁？",
+      "answer": "曹丕",
+      "entities": ["魏国", "曹丕"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "R07",
+      "category": "relation",
+      "question": "红楼梦中的贾宝玉和林黛玉是什么关系？",
+      "answer": "表兄妹关系",
+      "entities": ["贾宝玉", "林黛玉"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "R08",
+      "category": "relation",
+      "question": "西游记中唐僧的徒弟有哪些？",
+      "answer": "孙悟空、猪八戒、沙僧、白龙马",
+      "entities": ["唐僧", "孙悟空", "猪八戒", "沙僧"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "D01",
+      "category": "disambiguation",
+      "question": "苹果公司的创始人是谁？",
+      "answer": "史蒂夫·乔布斯",
+      "entities": ["苹果公司"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "D02",
+      "category": "disambiguation",
+      "question": "苹果是什么水果？",
+      "answer": "蔷薇科苹果属植物",
+      "entities": ["苹果"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "D03",
+      "category": "disambiguation",
+      "question": "李白是诗人还是剑客？",
+      "answer": "诗人",
+      "entities": ["李白"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "D04",
+      "category": "disambiguation",
+      "question": "长安是现在的哪个城市？",
+      "answer": "西安",
+      "entities": ["长安"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "D05",
+      "category": "disambiguation",
+      "question": "三国中的曹操是什么身份？",
+      "answer": "政治家、军事家、诗人",
+      "entities": ["曹操"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "H01",
+      "category": "hallucination",
+      "question": "唐朝有多少人口？",
+      "answer": "约5000-8000万",
+      "entities": ["唐朝"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "H02",
+      "category": "hallucination",
+      "question": "唐太宗每天几点上朝？",
+      "answer": "无确切记录",
+      "entities": ["唐太宗"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "H03",
+      "category": "hallucination",
+      "question": "李白的儿子叫什么名字？",
+      "answer": "李伯禽、李天然",
+      "entities": ["李白"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "H04",
+      "category": "hallucination",
+      "question": "唐朝有互联网吗？",
+      "answer": "没有",
+      "entities": ["唐朝"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "H05",
+      "category": "hallucination",
+      "question": "马云是谁？",
+      "answer": "现代企业家",
+      "entities": [],
+      "difficulty": "medium"
+    }
+  ]
+}
