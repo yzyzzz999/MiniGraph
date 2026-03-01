@@ -76,49 +76,54 @@ class HNSWIndex:
         """
         在指定层搜索最近邻
         
-        返回: [(distance, node_id), ...] 按距离排序
+        返回: [(similarity, node_id), ...] 按相似度降序
         """
         # 访问过的节点
         visited: Set[int] = {entry_point}
         
-        # 候选集 (距离, node_id)，用最大堆（取负值实现）
-        candidates = [(-self._cosine_similarity(query, self.nodes[entry_point].vector), entry_point)]
+        # 候选集: 用最大堆（Python 只有最小堆，所以存负值）
+        # (负相似度, node_id)
+        entry_sim = self._cosine_similarity(query, self.nodes[entry_point].vector)
+        candidates = [(-entry_sim, entry_point)]
         
-        # 结果集 (距离, node_id)，用最大堆
-        results = [(-self._cosine_similarity(query, self.nodes[entry_point].vector), entry_point)]
+        # 结果集: 同样用最大堆，保持 ef 个最佳结果
+        results = [(-entry_sim, entry_point)]
         
         while candidates:
-            # 取出相似度最大的候选（注意：用负值实现最大堆）
-            sim_neg, curr_id = heapq.heappop(candidates)
-            curr_sim = -sim_neg
+            # 取出相似度最大的候选
+            neg_sim, curr_id = heapq.heappop(candidates)
+            curr_sim = -neg_sim
             
-            # 如果当前相似度已经小于结果集中最差的，停止
+            # 如果当前相似度小于结果集中最差的，停止
             if len(results) >= ef:
-                worst_sim = -results[0][0]
+                worst_sim = -results[0][0]  # 最大堆顶是最差的
                 if curr_sim < worst_sim:
                     break
             
-            # 遍历邻居
+            # 遍历当前节点的邻居
             node = self.nodes[curr_id]
-            if layer in node.neighbors and node.neighbors[layer]:
-                for neighbor_id in node.neighbors[layer]:
-                    if neighbor_id not in visited:
-                        visited.add(neighbor_id)
-                        neighbor_sim = self._cosine_similarity(query, self.nodes[neighbor_id].vector)
-                        
-                        # 加入候选集（用负相似度实现最大堆）
-                        heapq.heappush(candidates, (-neighbor_sim, neighbor_id))
-                        
-                        # 加入结果集
-                        heapq.heappush(results, (-neighbor_sim, neighbor_id))
-                        
-                        # 保持结果集大小为 ef
-                        if len(results) > ef:
-                            heapq.heappop(results)
+            if layer not in node.neighbors:
+                continue
+                
+            for neighbor_id in node.neighbors[layer]:
+                if neighbor_id in visited:
+                    continue
+                    
+                visited.add(neighbor_id)
+                neighbor_sim = self._cosine_similarity(query, self.nodes[neighbor_id].vector)
+                
+                # 加入候选集继续探索
+                heapq.heappush(candidates, (-neighbor_sim, neighbor_id))
+                
+                # 加入结果集
+                heapq.heappush(results, (-neighbor_sim, neighbor_id))
+                
+                # 保持结果集大小为 ef
+                if len(results) > ef:
+                    heapq.heappop(results)  # 移除最差的
         
-        # 返回排序后的结果（按相似度降序）
-        final_results = [(-d, nid) for d, nid in results]
-        final_results.sort(reverse=True)  # 按相似度降序
+        # 转换为列表并排序（按相似度降序）
+        final_results = sorted([(-sim, nid) for sim, nid in results], reverse=True)
         return final_results
     
     def _select_neighbors(self, query: np.ndarray, 
