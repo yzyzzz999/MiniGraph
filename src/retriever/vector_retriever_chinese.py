@@ -25,11 +25,13 @@ class ChineseVectorRetriever:
             print(f"加载中文 embedding 模型: {model_name}")
             self.tokenizer = AutoTokenizer.from_pretrained(
                 model_name,
-                cache_dir="/root/.cache/huggingface/hub"
+                cache_dir="/root/.cache/huggingface/hub",
+                local_files_only=True
             )
             self.model = AutoModel.from_pretrained(
                 model_name,
-                cache_dir="/root/.cache/huggingface/hub"
+                cache_dir="/root/.cache/huggingface/hub",
+                local_files_only=True
             ).to(self.device)
         
         self.model.eval()
