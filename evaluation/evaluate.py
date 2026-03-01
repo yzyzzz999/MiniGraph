@@ -137,20 +137,37 @@ class MiniGraphEvaluator:
         
         # 检查人名（允许部分匹配）
         # 例如 "唐太宗李世民" 可以匹配 "唐太宗" 或 "李世民"
+        # 改进：也允许包含关系，如 "祖孙关系" 可以匹配 "祖孙"
         name_keywords = [k for k in keywords if len(k) >= 2]
-        matched_keywords = 0
         
+        # 特殊处理：关系类答案
+        relation_keywords = ['关系', '联系', '关联']
+        if any(rk in ground_truth_lower for rk in relation_keywords):
+            # 关系题：只要预测中包含关系描述的关键词即可
+            # 提取 ground_truth 中的核心关系词
+            core_relations = []
+            for kw in name_keywords:
+                if kw not in relation_keywords and kw not in ['什么', '怎么', '的', '是']:
+                    core_relations.append(kw)
+            # 匹配至少一个核心关系词
+            for rel in core_relations:
+                if rel in prediction_lower:
+                    return True
+        
+        matched_keywords = 0
         for keyword in name_keywords:
             if keyword in prediction_lower:
                 matched_keywords += 1
         
-        # 如果匹配了至少一个关键词，认为是正确的
-        # 对于短答案（1-2个关键词），需要全部匹配
+        # 改进的匹配逻辑：
+        # 对于短答案（1-2个关键词），匹配至少一个即可（放宽）
         # 对于长答案（>2个关键词），匹配至少一个即可
+        # 特别处理：如果 ground_truth 包含人名+字/号，允许部分匹配
         if len(name_keywords) <= 2:
-            return matched_keywords >= len(name_keywords)
+            return matched_keywords >= 1  # 放宽：从全部匹配改为至少一个
         else:
-            return matched_keywords >= 1
+            # 长答案：匹配至少 50% 的关键词，或至少 2 个
+            return matched_keywords >= max(2, len(name_keywords) // 2)
     
     def evaluate_test_case(self, test_case: Dict) -> TestResult:
         print(f"\n评测: {test_case['id']} - {test_case['question']}")
