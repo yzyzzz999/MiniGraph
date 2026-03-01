@@ -270,7 +270,8 @@
     </div>
     
     <script>
-        const API_BASE = 'http://172.17.0.2:5000';
+        // 使用相对路径，自动适配当前域名和端口
+        const API_BASE = window.location.origin;
         
         // 检查系统状态
         async function checkStatus() {
