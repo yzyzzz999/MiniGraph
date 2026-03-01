@@ -915,6 +915,13 @@ def process_query_sync(data):
     }
 
 
+# 配置静态文件目录（用于前端界面）
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'web')
+if os.path.exists(static_dir):
+    app.static_folder = static_dir
+    print(f"静态文件目录: {static_dir}")
+
+
 def main():
     print("=" * 60)
     print("启动 MiniGraph API (优化版 - RAG + 关系链)")
@@ -922,6 +929,7 @@ def main():
     print(f"Embedding 模型: {retriever.model_name if hasattr(retriever, 'model_name') else 'unknown'}")
     print(f"向量索引: {len(retriever.entities)} 个实体")
     print("访问: http://localhost:5000")
+    print("前端界面: http://localhost:5000/web")
     print("=" * 60)
     app.run(host='0.0.0.0', port=5000, debug=False)
 

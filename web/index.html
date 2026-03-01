@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniGraph - 中文知识图谱问答</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a6fd6;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            min-height: 100px;
+        }
+        
+        .result.empty {
+            color: #999;
+            text-align: center;
+            line-height: 100px;
+        }
+        
+        .result-content {
+            line-height: 1.6;
+        }
+        
+        .result-content .answer {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-content .context {
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+        }
+        
+        .error {
+            color: #e74c3c;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .entity-list {
+            list-style: none;
+        }
+        
+        .entity-list li {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .entity-list li:hover {
+            background: #f0f0f0;
+        }
+        
+        .entity-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .similarity {
+            color: #667eea;
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+            font-size: 0.9rem;
+        }
+        
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 MiniGraph</h1>
+        <p>中文知识图谱问答系统</p>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>系统状态</h2>
+                <span id="status" class="status">检查中...</span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('qa')">💬 智能问答</div>
+                <div class="tab" onclick="switchTab('search')">🔍 实体搜索</div>
+                <div class="tab" onclick="switchTab('vector')">📊 向量检索</div>
+            </div>
+            
+            <div id="qa-tab" class="tab-content active">
+                <div class="input-group">
+                    <input type="text" id="qa-input" placeholder="输入问题，例如：唐朝的开国皇帝是谁？" onkeypress="if(event.key==='Enter')askQuestion()">
+                    <button onclick="askQuestion()">提问</button>
+                </div>
+                <div id="qa-result" class="result empty">输入问题后点击提问</div>
+            </div>
+            
+            <div id="search-tab" class="tab-content">
+                <div class="input-group">
+                    <input type="text" id="search-input" placeholder="输入关键词，例如：唐朝" onkeypress="if(event.key==='Enter')searchEntity()">
+                    <button onclick="searchEntity()">搜索</button>
+                </div>
+                <div id="search-result" class="result empty">输入关键词后点击搜索</div>
+            </div>
+            
+            <div id="vector-tab" class="tab-content">
+                <div class="input-group">
+                    <input type="text" id="vector-input" placeholder="输入查询，例如：人工智能" onkeypress="if(event.key==='Enter')vectorSearch()">
+                    <button onclick="vectorSearch()">检索</button>
+                </div>
+                <div id="vector-result" class="result empty">输入查询后点击检索</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>MiniGraph - 基于 Neo4j + LLM + 向量检索的中文知识图谱问答系统</p>
+        <p>数据来源：CN-DBpedia/OwnThink | 向量模型：BAAI/bge-large-zh</p>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://172.17.0.2:5000';
+        
+        // 检查系统状态
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                const statusEl = document.getElementById('status');
+                if (data.status === 'healthy') {
+                    statusEl.innerHTML = '<span class="status-dot"></span> 运行正常';
+                    statusEl.className = 'status';
+                } else {
+                    statusEl.innerHTML = '<span class="status-dot"></span> 服务异常';
+                    statusEl.className = 'status error';
+                }
+            } catch (e) {
+                const statusEl = document.getElementById('status');
+                statusEl.innerHTML = '<span class="status-dot"></span> 连接失败';
+                statusEl.className = 'status error';
+            }
+        }
+        
+        // 切换标签
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+        
+        // 智能问答
+        async function askQuestion() {
+            const input = document.getElementById('qa-input');
+            const result = document.getElementById('qa-result');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            result.innerHTML = '<div class="loading">思考中...</div>';
+            result.classList.remove('empty');
+            
+            try {
+                const response = await fetch(`${API_BASE}/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+                const data = await response.json();
+                
+                let html = `<div class="result-content">`;
+                html += `<div class="answer"><strong>回答：</strong>${data.answer || '暂无答案'}</div>`;
+                if (data.context && data.context.length > 0) {
+                    html += `<div class="context"><strong>相关实体：</strong>`;
+                    html += data.context.map(c => `${c.name || c.entity?.name} (${(c.similarity * 100).toFixed(1)}%)`).join('、');
+                    html += `</div>`;
+                }
+                html += `</div>`;
+                result.innerHTML = html;
+            } catch (e) {
+                result.innerHTML = `<div class="error">请求失败：${e.message}</div>`;
+            }
+        }
+        
+        // 实体搜索
+        async function searchEntity() {
+            const input = document.getElementById('search-input');
+            const result = document.getElementById('search-result');
+            const keyword = input.value.trim();
+            
+            if (!keyword) return;
+            
+            result.innerHTML = '<div class="loading">搜索中...</div>';
+            result.classList.remove('empty');
+            
+            try {
+                const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(keyword)}`);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    let html = '<ul class="entity-list">';
+                    data.results.forEach(r => {
+                        html += `<li>${r.name} ${r.similarity ? `<span class="similarity">${(r.similarity * 100).toFixed(1)}%</span>` : ''}</li>`;
+                    });
+                    html += '</ul>';
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = '<div class="empty">未找到相关实体</div>';
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="error">请求失败：${e.message}</div>`;
+            }
+        }
+        
+        // 向量检索
+        async function vectorSearch() {
+            const input = document.getElementById('vector-input');
+            const result = document.getElementById('vector-result');
+            const query = input.value.trim();
+            
+            if (!query) return;
+            
+            result.innerHTML = '<div class="loading">检索中...</div>';
+            result.classList.remove('empty');
+            
+            try {
+                const response = await fetch(`${API_BASE}/vector_search?q=${encodeURIComponent(query)}&top_k=5`);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    let html = '<ul class="entity-list">';
+                    data.results.forEach(r => {
+                        const name = r.name || r.entity?.name;
+                        html += `<li>${name} <span class="similarity">${(r.similarity * 100).toFixed(1)}%</span></li>`;
+                    });
+                    html += '</ul>';
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = '<div class="empty">未找到相关实体</div>';
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="error">请求失败：${e.message}</div>`;
+            }
+        }
+        
+        // 页面加载时检查状态
+        checkStatus();
+        setInterval(checkStatus, 30000); // 每30秒检查一次
+    </script>
+</body>
+</html>
