@@ -17,7 +17,7 @@ from threading import Lock
 
 sys.path.append('/autodl-fs/data/MiniGraph/src')
 from llm.llm_client_openai import get_llm_client
-from retriever.vector_retriever_chinese import ChineseVectorRetriever
+from retriever.unified_retriever import UnifiedVectorRetriever as ChineseVectorRetriever
 from retriever.vector_cache import vector_cache_exists, load_vector_cache, save_vector_cache
 
 app = Flask(__name__)
